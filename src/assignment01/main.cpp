@@ -92,7 +92,7 @@ int main()
         auto depthFrameUnscaled = depthFrame.clone();
         depthFrame = 20 * depthFrame;
 		//TODO
-        cv::imshow("depth", depthFrame);
+        //cv::imshow("depth", depthFrame);
         cv::imshow("color", colorFrame);
 		cv::imshow("touch", touchFrame);
 

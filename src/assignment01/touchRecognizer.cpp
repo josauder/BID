@@ -24,20 +24,20 @@ std::vector<cv::RotatedRect> TouchRecognizer::recognize(const cv::Mat& depthFram
 	std::vector<std::vector<cv::Point>> contours;
 
 	cv::absdiff(depthFrame, m_background, difference);
-	cv::threshold(difference, thresholdHigh, 600, UINT16_MAX, 4);
-	cv::threshold(thresholdHigh, thresholdLow, 300, UINT16_MAX, 0);
-	cv::blur(thresholdLow, blur, cv::Size(15,15));
-	blur.convertTo(blur, CV_8UC1);
-	cv::threshold(blur, lowPassFiltered, 254, UINT8_MAX, 0);
+	cv::threshold(difference, thresholdHigh, 1600, UINT16_MAX, 4);
+	cv::threshold(thresholdHigh, thresholdLow, 900, UINT16_MAX, 0); //TODO
+	//cv::GaussianBlur(thresholdLow, blur, cv::Size(61, 61), 0);// (thresholdLow, blur, cv::Size(61, 61));
+	thresholdLow.convertTo(thresholdLow, CV_8UC1);
+	cv::threshold(thresholdLow, lowPassFiltered, 254, UINT8_MAX, 0);
 
 	cv::findContours(lowPassFiltered, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+	cv::imshow("depth", thresholdLow);
 	for (std::vector<cv::Point> contour : contours) {
-		if (cv::contourArea(contour) < 1600)
+		if (cv::contourArea(contour) < 900)
 			continue;
 		cv::RotatedRect rect = cv::fitEllipse(contour);
 		positions.push_back(rect);
 		std::cout << "detected foot press at: x" << rect.center.x << "y" << rect.center.y << std::endl;
-		cv::circle(lowPassFiltered, rect.center, 20, UINT16_MAX);
 	}
     /*~~~~~~~~~~~*
      * YOUR CODE *
