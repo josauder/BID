@@ -26,8 +26,9 @@ std::vector<cv::RotatedRect> TouchRecognizer::recognize(const cv::Mat& depthFram
 	cv::absdiff(depthFrame, m_background, difference);
 	cv::threshold(difference, thresholdHigh, 1600, UINT16_MAX, 4);
 	cv::threshold(thresholdHigh, thresholdLow, 900, UINT16_MAX, 0); //TODO
-	//cv::GaussianBlur(thresholdLow, blur, cv::Size(61, 61), 0);// (thresholdLow, blur, cv::Size(61, 61));
 	thresholdLow.convertTo(thresholdLow, CV_8UC1);
+	//cv::GaussianBlur(thresholdLow, blur, cv::Size(61, 61), 0);// (thresholdLow, blur, cv::Size(61, 61));#
+	//Maybe do open or close (look it up in opencv doku)
 	cv::threshold(thresholdLow, lowPassFiltered, 254, UINT8_MAX, 0);
 
 	cv::findContours(lowPassFiltered, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
