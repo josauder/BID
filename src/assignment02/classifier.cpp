@@ -4,15 +4,30 @@
 #include <vector>
 #include <algorithm>
 
+void showPath(std::vector<cv::Point2i> path, int scale = 2) {
+	cv::Mat dataVisFrame;
+	dataVisFrame.create(100 * scale, 100 * scale, CV_8UC3);
+	dataVisFrame = cv::Scalar::all(0);
+
+	for (auto i = 0u; i + 1 < path.size(); ++i)
+	{
+		cv::line(dataVisFrame, path[i], path[i + 1], cv::Scalar(0, 255, 0), 3);
+		cv::circle(dataVisFrame, path[i], 9, cv::Scalar(0, 255, 0), 3);
+	}
+	// last circle
+	cv::circle(dataVisFrame, path.back(), 9, cv::Scalar(0, 255, 0), 3);
+
+	const auto name = "normalized path";
+	cv::namedWindow(name);
+	cv::moveWindow(name, 100 * scale, 100 * scale);
+	cv::imshow(name, dataVisFrame);
+}
+
 Classifier::Classifier(std::vector<Digit> dataSet, const int k)
 : c_dataSet(std::move(dataSet))
 , c_simplifiedSize(c_dataSet.front().points().size())
 , c_k(k)
 {
-	for (int i = 0; i < KNN_K; i++) {
-		knneighbors[i].distance = DBL_MAX;
-		knneighbors[i].label = -1;
-	}
 }
 
 double compare(std::vector<cv::Point2i> points, Digit digit) {
@@ -25,7 +40,7 @@ double compare(std::vector<cv::Point2i> points, Digit digit) {
 }
 
 
-void Classifier::updateKNN(Neighbor n) {
+void Classifier::updateKNN(Neighbor n, Neighbor knneighbors[KNN_K]) {
 	int max_index = KNN_K;
 	double max_distance = -1;
 	bool shouldSwap = false;
@@ -46,37 +61,35 @@ void Classifier::updateKNN(Neighbor n) {
 
 void Classifier::classify(const std::vector<cv::Point2f>& path)
 {
+	Neighbor knneighbors[KNN_K];
+	for (int i = 0; i < KNN_K; i++) {
+		knneighbors[i].distance = DBL_MAX;
+		knneighbors[i].label = -1;
+	}
+
     // equidistant sampling
     simplify(path);
 	
 	std::vector<cv::Point2i> normalizedPath;
 	cv::Rect boundingBox = cv::boundingRect(m_simplifiedPath);
-	std::cout << "x:" << boundingBox.x << " y:" << boundingBox.y << " height:" << boundingBox.height << "width:" << boundingBox.width << std::endl;
 	float scaling_x = 100.0 / boundingBox.width;
 	float scaling_y = 100.0 / boundingBox.height;
+	std::cout << "x:" << boundingBox.x << " y:" << boundingBox.y << " height:" << boundingBox.height << "width:" << boundingBox.width << "scaling x:" << scaling_x << " y:" << scaling_y << std::endl;
 
 	for (int i = 0; i < m_simplifiedPath.size(); i++) {
-		normalizedPath.push_back(m_simplifiedPath[i]);
-		normalizedPath[i].x = m_simplifiedPath[i].x - boundingBox.x;
-		normalizedPath[i].x = m_simplifiedPath[i].x * scaling_x;
-		normalizedPath[i].y = m_simplifiedPath[i].y - boundingBox.y;
-		normalizedPath[i].y = m_simplifiedPath[i].y * scaling_y;
-		normalizedPath[i].y = 100 - normalizedPath[i].y;
+		cv::Point2i point;
+		point.x = (m_simplifiedPath[i].x - boundingBox.x) * scaling_x;
+		point.y = 100 - ((m_simplifiedPath[i].y - boundingBox.y) * scaling_y);
+		std::cout << point << std::endl;
+		normalizedPath.push_back(point);
 	}
 
-
-	/*for (auto p : m_simplifiedPath) {
-		std::cout << "simplifiedPoint x:" << p.x << " y:" << p.y << std::endl;
-	}*/
-
-	for (auto p : c_dataSet[0].points()) {
-		std::cout << "Learning data set Point x:" << p.x << " y:" << p.y << std::endl;
-	}
+	//showPath(normalizedPath);
 
 	for (auto digit : c_dataSet) {
 		double distance = compare(normalizedPath, digit);
 		Neighbor neighbor = { distance, digit.label() };
-		updateKNN(neighbor);
+		updateKNN(neighbor, knneighbors);
 	}
 
 	int labels[10] = { 0 };
@@ -129,7 +142,7 @@ void Classifier::simplify(std::vector<cv::Point2f> path)
 		lastPoint = point;
 	}
 	std::cout << "pathLength:" << pathLength << std::endl;
-	double averageDistance = pathLength / (c_simplifiedSize - 1);
+	double averageDistance = pathLength / (c_simplifiedSize - 1) +1;
 	std::cout << "averageDistance:" << averageDistance << std::endl;
 
 	lastPoint = path.at(0);

@@ -2,7 +2,7 @@
 
 #include "data.hpp"
 
-#define KNN_K 7
+#define KNN_K 50
 
 struct Neighbor {
 	float distance;
@@ -16,7 +16,7 @@ public:
     void classify(const std::vector<cv::Point2f>& path);
     int getResult() const;
     std::vector<cv::Point2f> getSimplifiedPath() const;
-	void updateKNN(Neighbor n);
+	void updateKNN(Neighbor n, Neighbor knneighbors[KNN_K]);
 private:
     const std::vector<Digit> c_dataSet;
     const int c_simplifiedSize;
@@ -24,5 +24,4 @@ private:
     int m_result = -1;
     std::vector<cv::Point2f> m_simplifiedPath;
     void simplify(std::vector<cv::Point2f> path);
-	Neighbor knneighbors[KNN_K];
 };

@@ -24,10 +24,12 @@ std::vector<cv::RotatedRect> TouchRecognizer::recognize(const cv::Mat& depthFram
 	std::vector<std::vector<cv::Point>> contours;
 
 	cv::absdiff(depthFrame, m_background, difference);
+											//1600
 	cv::threshold(difference, thresholdHigh, 1600, UINT16_MAX, 4);
+											//900
 	cv::threshold(thresholdHigh, thresholdLow, 900, UINT16_MAX, 0); //TODO
 	thresholdLow.convertTo(thresholdLow, CV_8UC1);
-	//cv::GaussianBlur(thresholdLow, blur, cv::Size(61, 61), 0);// (thresholdLow, blur, cv::Size(61, 61));#
+	cv::blur(thresholdLow, blur, cv::Size(30, 30));// (thresholdLow, blur, cv::Size(61, 61));#
 	//Maybe do open or close (look it up in opencv doku)
 	cv::threshold(thresholdLow, lowPassFiltered, 254, UINT8_MAX, 0);
 
@@ -38,7 +40,7 @@ std::vector<cv::RotatedRect> TouchRecognizer::recognize(const cv::Mat& depthFram
 			continue;
 		cv::RotatedRect rect = cv::fitEllipse(contour);
 		positions.push_back(rect);
-		std::cout << "detected foot press at: x" << rect.center.x << "y" << rect.center.y << std::endl;
+		//std::cout << "detected foot press at: x" << rect.center.x << "y" << rect.center.y << std::endl;
 	}
     /*~~~~~~~~~~~*
      * YOUR CODE *
