@@ -14,6 +14,7 @@ private:
      * YOU MAY DEFINE *
      * CONSTANTS HERE *
      *~~~~~~~~~~~~~~~~*/
+	bool m_calibrated = false;
 	cv::uint16_t shift = UINT16_MAX / 2;
 	bool calibrated = false;
 };
