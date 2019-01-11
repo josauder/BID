@@ -41,7 +41,7 @@ double compare(std::vector<cv::Point2i> points, Digit digit) {
 
 
 void Classifier::updateKNN(Neighbor n, Neighbor knneighbors[KNN_K]) {
-	int max_index = KNN_K;
+	int max_index = KNN_K; //KNN_K -1 probably would be better
 	double max_distance = -1;
 	bool shouldSwap = false;
 
@@ -131,6 +131,56 @@ std::vector<cv::Point2f> Classifier::getSimplifiedPath() const
     return m_simplifiedPath;
 }
 
+
+
+void Classifier::simplify(std::vector<cv::Point2f> path)
+{
+	m_simplifiedPath.clear();
+	double pathLength = 0;
+	cv::Point2f lastPoint = path.at(0);
+	for (int i = 1; i < path.size(); i++) {
+		pathLength += cv::norm(cv::Mat(path[i] - lastPoint));
+		lastPoint = path[i];
+	}
+	std::cout << "pathLength:" << pathLength << std::endl;
+	double averageDistance = pathLength / (c_simplifiedSize - 1);
+	std::cout << "averageDistance:" << averageDistance << std::endl;
+
+	lastPoint = path.at(0);
+	double currrentLength = 0;
+	m_simplifiedPath.push_back(path[0]);
+
+	int j = 1;
+	for (int i = 1; i < c_simplifiedSize; ) {
+		double part = cv::norm(path[j] - lastPoint);
+
+		if (part >= averageDistance - currrentLength) {
+			float alpha = (averageDistance - currrentLength) / part;
+			cv::Point2f p = ((1 - alpha) * lastPoint) + (alpha * path[j]);
+			m_simplifiedPath.push_back(p);
+			lastPoint = p;
+			currrentLength = 0;
+			i++;
+		}
+		else {
+			currrentLength += part;
+			lastPoint = path[j];
+			j++;
+		}
+	}
+	m_simplifiedPath.push_back(path.at(path.size() - 1));
+	std::cout << "m_simplifiedPath.size():" << m_simplifiedPath.size() << std::endl;
+
+// sample path with equal spacing and store in m_simplifiedPath
+// you should use c_simplifiedSize as number of points in simplified path
+
+/*~~~~~~~~~~~*
+* YOUR CODE *
+* GOES HERE *
+*~~~~~~~~~~~*/
+}
+
+/*
 void Classifier::simplify(std::vector<cv::Point2f> path)
 {
 	m_simplifiedPath.clear();
@@ -138,7 +188,7 @@ void Classifier::simplify(std::vector<cv::Point2f> path)
 	cv::Point2f lastPoint = path.at(0);
 
 	for (cv::Point2f point : path) {
-		pathLength += cv::norm(point - lastPoint);
+		pathLength += cv::norm(cv::Mat(point - lastPoint));
 		lastPoint = point;
 	}
 	std::cout << "pathLength:" << pathLength << std::endl;
@@ -165,5 +215,5 @@ void Classifier::simplify(std::vector<cv::Point2f> path)
     /*~~~~~~~~~~~*
      * YOUR CODE *
      * GOES HERE *
-     *~~~~~~~~~~~*/
-}
+     *~~~~~~~~~~~
+}*/

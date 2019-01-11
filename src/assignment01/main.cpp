@@ -79,7 +79,7 @@ int main()
 
 		std::vector<cv::RotatedRect> rotatedRects;
 		if (calibrated) {
-			rotatedRects = touchRecognizer.recognize(20 * depthFrame);
+			rotatedRects = touchRecognizer.recognize(depthFrame);
 			for (cv::RotatedRect rotatedRect : rotatedRects) {
 				touchVisualizer.draw(colorFrame, rotatedRect, touchFrame);
 			}
@@ -90,7 +90,7 @@ int main()
 
         // show frames
         auto depthFrameUnscaled = depthFrame.clone();
-        depthFrame = 20 * depthFrame;
+        //depthFrame = 20 * depthFrame;
 		//TODO
         //cv::imshow("depth", depthFrame);
         cv::imshow("color", colorFrame);

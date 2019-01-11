@@ -37,7 +37,7 @@ int main()
     // calibrate
     kinect.getDepthFrame(depthFrame);
 	std::cout << depthFrame.rows << "," <<  depthFrame.cols;
-    touchRecognizer.calibrate(20 * depthFrame);
+    touchRecognizer.calibrate(depthFrame);
 
     // prepare windows - this isn't necessary, but it allows to assign useful positions
     cv::namedWindow("color");
@@ -57,7 +57,7 @@ int main()
         kinect.getColorFrame(colorFrame);
 
         // run touch recognizer
-        auto positions = touchRecognizer.recognize(20 * depthFrame);
+        auto positions = touchRecognizer.recognize(depthFrame);
 
         // calibrate homography matrix
         if(!calibrator.calibrationComplete())
@@ -99,7 +99,7 @@ int main()
             running = false;
             break;
 		case 0x0d: // enter
-            touchRecognizer.calibrate(20 * depthFrameUnscaled);
+            touchRecognizer.calibrate(depthFrameUnscaled);
             break;
 		case 0x20: // space
             game.start();

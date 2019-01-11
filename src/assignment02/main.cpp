@@ -6,6 +6,117 @@
 #include <opencv2/opencv.hpp>
 #include "data.hpp"
 
+#include <unordered_set>
+
+
+
+
+void addElementIfNew(std::list<std::unordered_set<int>> &equivalenceTable, int newElement) {
+	for (auto set : equivalenceTable) {
+		if (set.count(newElement)) {
+			return;
+		}
+	}
+	std::unordered_set<int> newSet;
+	newSet.insert(newElement);
+	equivalenceTable.push_back(newSet);
+}
+
+void merge(std::list<std::unordered_set<int>> &equivalenceTable, int a, int b) {
+	auto firstSet = equivalenceTable.begin();
+	auto lastSet = equivalenceTable.begin();
+	for (auto iterator = equivalenceTable.begin(); iterator != equivalenceTable.end(); iterator++) {
+		if (iterator->count(a)) {
+			firstSet = iterator;
+			//std::cout << "a found";
+		}
+		if (iterator->count(b)) {
+			lastSet = iterator;
+			//std::cout << " b found\n";
+		}
+	}
+	if (firstSet == lastSet) {
+		//std::cout << "Same set, no merging needed" << std::endl;
+		return;
+	}
+	std::cout << "merging " << a << "with" << b << std::endl;
+	for (auto element : (*lastSet)) {
+		firstSet->insert(element);
+	}
+	equivalenceTable.erase(lastSet);
+}
+
+
+int playground() {
+	cv::Mat img = cv::imread("test.png", CV_LOAD_IMAGE_GRAYSCALE);
+	if (!img.data)                              // Check for invalid input
+	{
+		std::cout << "Could not open or find the image" << std::endl;
+		return -1;
+	}
+	std::vector<char> mask = std::vector<char>((img.rows + 1) * (img.cols + 1), 0);
+	std::list<std::unordered_set<int>> equTable;
+
+	int blobCounter = 1;
+	for (int y = 0; y < img.rows; y++) {
+		for (int x = 0; x < img.cols; x++) {
+			int value = img.at<std::uint8_t>(y, x);
+			if (value) {
+				std::vector<int> connectedValues;
+				int temp = 0;
+				temp = mask[img.cols * y + x];
+				if(temp) {
+					connectedValues.push_back(temp);
+				}
+				temp = mask[img.cols * y + x + 1];
+				if (temp) {
+					connectedValues.push_back(temp);
+				}
+				temp = mask[img.cols * (y + 1) + x];
+				if (temp) {
+					connectedValues.push_back(temp);
+				}
+				if (connectedValues.size()) {
+					for (int i = 1; i < connectedValues.size(); i++) {
+						merge(equTable, connectedValues[0], connectedValues[i]);
+					}
+					mask[img.cols * (y + 1) + x + 1] = connectedValues[0];
+				}
+				else {
+					addElementIfNew(equTable, blobCounter);
+					mask[img.cols * (y + 1) + x + 1] = blobCounter;
+					blobCounter++;
+				}
+			}
+		}
+		std::cout << "Y:" << y << std::endl;
+	}
+
+	for (int y = 0; y < img.rows; y++) {
+		for (int x = 0; x < img.cols; x++) {
+			int i = 1;
+			bool flag = false;
+			for (auto set : equTable) {
+				int temp = mask[img.cols * (y + 1) + x + 1];
+				if (set.count(temp)) {
+					flag = true;
+					break;
+				}
+				i++;
+			}
+			if (flag)
+				img.at<std::uint8_t>(y, x) = i * 30;
+			else
+				img.at<std::uint8_t>(y, x) = 0;
+		}
+	}
+
+	cv::namedWindow("Playground",CV_WINDOW_AUTOSIZE);
+	cv::imshow("Playground", img);
+
+	return 0;
+}
+
 int main()
 {
     // initialize framework
@@ -56,12 +167,13 @@ int main()
 
     while(running)
     {
+		playground();
         // update frames
         kinect.getDepthFrame(depthFrame);
         kinect.getColorFrame(colorFrame);
 
         // run touch recognizer
-        auto positions = touchRecognizer.recognize(20 * depthFrame);
+        auto positions = touchRecognizer.recognize(depthFrame);
         if(!positions.empty())
 		{
             // track user's drawing using the path variable
@@ -97,7 +209,6 @@ int main()
 
         // show frames
         auto depthFrameUnscaled = depthFrame.clone();
-        depthFrame = 20 * depthFrame;
         //cv::imshow("depth", depthFrame);
         cv::imshow("color", colorFrame);
         cv::imshow("output", outputFrame);

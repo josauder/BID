@@ -80,14 +80,9 @@ cv::Point2f HomograpyCalibrator::cameraToGame(const cv::Point2f& point) const
     // Use m_cameraToGame to transform the point.
     // Tip: You can only multiply matrices with each other in OpenCV, so you'll have to build one (or build a cv::Vec3 and convert that).
     // Also, matrix multiplication isn't commutative.
-	cv::Mat_<float> p(3/*rows*/, 1 /* cols */);
+	cv::Mat p = cv::Mat(cv::Point3f(point.x , point.y, 1.0f));
 
-	p(0, 0) = point.x;
-	p(1, 0) = point.y;
-	p(2, 0) = 1.0;
-	cv::Mat in = cv::Mat(cv::Point3f(point.x, point.y, 1.0));
-	cv::Mat_<float> result = (m_cameraToGame * p);
-	//cv::Mat res = cv::Mat(result);
+	cv::Mat result = (m_cameraToGame * p);
 	return cv::Point2f(result.at<float>(0,0) / result.at<float>(2,0), result.at<float>(1,0) / result.at<float>(2,0));
 	return point;
 }
