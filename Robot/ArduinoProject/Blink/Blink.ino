@@ -21,13 +21,18 @@
 
   http://www.arduino.cc/en/Tutorial/Blink
 */
+
+#define STATE_DRIVING_STRAIGHT 0
+#define STATE_TURNING_LEFT 1
+#define STATE_TURINING_RIGHT 2
+
 const int LED_LEFT = 3;
 const int LED_RIGHT = 4;
 
 const int THRESHOLD = 10;
 int lastBrightnessLeft = 0;
 int lastBrightnessRight = 0;
-int state = 0;
+int state = STATE_DRIVE_FORWARD;
 // 0 ... drive forward
 // 1 ... turn left
 // 2 ... turn right
@@ -61,19 +66,19 @@ void loop() {
   int transitionRight = checkTransition(brightnessRight, lastBrightnessRight);
 
 
-  if(state == 0){
+  if(state == STATE_DRIVING_STRAIGHT){
     if(transitionLeft){
-      state = 1;
+      state = STATE_TURNING_LEFT;
     }else if(transitionRight){
-      state = 2;
+      state = STATE_TURINING_RIGHT;
     }
-  }else if(state == 1){
+  }else if(state == STATE_TURNING_LEFT){
     if(transitionRight){
-      state = 0;
+      state = STATE_DRIVING_STRAIGHT;
     }
-  }else if(state == 2){
+  }else if(state == STATE_TURINING_RIGHT){
     if(transitionLeft){
-      state = 0;
+      state = STATE_DRIVING_STRAIGHT;
     }
   }
 
@@ -89,14 +94,14 @@ void loop() {
   
   digitalWrite(LED_LEFT, LOW);
   digitalWrite(LED_RIGHT, LOW);
-  if(state == 0){
+  if(state == STATE_DRIVING_STRAIGHT){
     digitalWrite(LED_LEFT, HIGH);
     digitalWrite(LED_RIGHT, HIGH);
   }
-  if(state == 1){
+  if(state == STATE_TURNING_LEFT){
     digitalWrite(LED_RIGHT, HIGH);
   }
-  if(state == 2){
+  if(state == STATE_TURINING_RIGHT){
     digitalWrite(LED_LEFT, HIGH);    
   }
   lastBrightnessLeft = brightnessLeft;
